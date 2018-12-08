@@ -108,6 +108,9 @@ public class HuffProcessor {
 	private void codingHelper(HuffNode root, String path, String[] encodings) {
 		if (root.myLeft == null && root.myRight == null) { // leaf node
 			encodings[root.myValue] = path; // adds path to array
+			if (myDebugLevel >= DEBUG_HIGH) {
+				System.out.printf("encoding for %d is %s\n", root.myValue, path);
+			}
 			return;
 		} else {
 			codingHelper(root.myLeft, path + "0", encodings); // adds 0 to path if left subtree
@@ -124,6 +127,10 @@ public class HuffProcessor {
 	private HuffNode makeTreeFromCounts(int[] counts) {
 		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
 
+		if (myDebugLevel >= DEBUG_HIGH) {
+			System.out.printf("pq created with %d nodes\n", pq.size());
+		}
+		
 		for (int i = 0; counts[i] > 0; i++) {
 			pq.add(new HuffNode(i, counts[i], null, null));
 		}
