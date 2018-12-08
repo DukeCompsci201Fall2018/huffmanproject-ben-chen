@@ -76,7 +76,7 @@ public class HuffProcessor {
 	 * @param out the output
 	 */
 	private void writeHeader(HuffNode root, BitOutputStream out) {
-		if (root.myLeft != null && root.myRight != null) { // if internal node
+		if (root.myLeft != null || root.myRight != null) { // if internal node
 			out.writeBits(1, 0); // write a single bit of 0
 			writeHeader(root.myLeft, out); // reads left subtree
 			writeHeader(root.myRight, out);
@@ -131,8 +131,10 @@ public class HuffProcessor {
 			System.out.printf("pq created with %d nodes\n", pq.size());
 		}
 		
-		for (int i = 0; counts[i] > 0; i++) {
-			pq.add(new HuffNode(i, counts[i], null, null));
+		for (int i = 0; i < counts.length; i++) {
+			if (counts[i] > 0) {
+				pq.add(new HuffNode(i, counts[i], null, null));
+			}
 		}
 
 		while (pq.size() > 1) {
