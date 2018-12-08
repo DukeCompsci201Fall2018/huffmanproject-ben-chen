@@ -52,6 +52,33 @@ public class HuffProcessor {
 	}
 	
 	/**
+	 * Returns the encodings from a tree in an array
+	 * @param root the tree
+	 * @return encodings the array of encodings
+	 */
+	private String[] makeCodingsFromTree(HuffNode root) {
+		String[] encodings = new String[ALPH_SIZE + 1];
+	    codingHelper(root, "", encodings);
+		return encodings;
+	}
+	
+	/**
+	 * Reads tree and adds paths to each leaf to array
+	 * @param root root of specific subtree
+	 * @param path path to node as 1's and 0's
+	 * @param encodings array of encodings
+	 */
+	private void codingHelper(HuffNode root, String path, String[] encodings) {
+		if (root.myLeft == null && root.myRight == null) { // leaf node
+			encodings[root.myValue] = path; // adds path to array
+			return;
+		} else {
+			codingHelper(root.myLeft, path + "0", encodings); // adds 0 to path if left subtree
+			codingHelper(root.myRight, path + "1", encodings); // adds 1 to path if right subtree
+		}
+	}
+
+	/**
 	 * Uses priority queue of HuffNodes to create Huffman trie
 	 * @param counts array of frequencies of each 8-bit chunk
 	 * @return Huffman trie
