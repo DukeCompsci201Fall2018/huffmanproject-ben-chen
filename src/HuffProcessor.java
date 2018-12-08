@@ -42,30 +42,49 @@ public class HuffProcessor {
 		int[] counts = readForCounts(in);
 		HuffNode root = makeTreeFromCounts(counts);
 		String[] codings = makeCodingsFromTree(root);
-		
+
 		out.writeBits(BITS_PER_INT, HUFF_TREE);
 		writeHeader(root, out);
-		
+
 		in.reset();
 		writeCompressedBits(codings, in, out);
 		out.close();
 	}
 	
 	/**
+	 * Write the tree by writing a single 0 for internal nodes and a 1 
+	 * and the value stored in the leaf for leaf nodes
+	 * @param root the root of the subtree being written
+	 * @param out the output
+	 */
+	private void writeHeader(HuffNode root, BitOutputStream out) {
+		if (root.myLeft != null && root.myRight != null) { // if internal node
+			out.writeBits(1, 0); // write a single bit of 0
+			writeHeader(root.myLeft, out); // reads left subtree
+			writeHeader(root.myRight, out);
+		} else { // if leaf node
+			out.writeBits(1, 1); // write single bit of 1
+			out.writeBits(BITS_PER_WORD + 1, root.myValue); // write bits stored in leaf value
+		} 
+	}
+
+	/**
 	 * Returns the encodings from a tree in an array
+	 * 
 	 * @param root the tree
 	 * @return encodings the array of encodings
 	 */
 	private String[] makeCodingsFromTree(HuffNode root) {
 		String[] encodings = new String[ALPH_SIZE + 1];
-	    codingHelper(root, "", encodings);
+		codingHelper(root, "", encodings);
 		return encodings;
 	}
-	
+
 	/**
 	 * Reads tree and adds paths to each leaf to array
-	 * @param root root of specific subtree
-	 * @param path path to node as 1's and 0's
+	 * 
+	 * @param root      root of specific subtree
+	 * @param path      path to node as 1's and 0's
 	 * @param encodings array of encodings
 	 */
 	private void codingHelper(HuffNode root, String path, String[] encodings) {
@@ -80,31 +99,33 @@ public class HuffProcessor {
 
 	/**
 	 * Uses priority queue of HuffNodes to create Huffman trie
+	 * 
 	 * @param counts array of frequencies of each 8-bit chunk
 	 * @return Huffman trie
 	 */
 	private HuffNode makeTreeFromCounts(int[] counts) {
 		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
 
-		for(int i = 0; counts[i] > 0; i++) {
-		    pq.add(new HuffNode(i, counts[i], null, null));
+		for (int i = 0; counts[i] > 0; i++) {
+			pq.add(new HuffNode(i, counts[i], null, null));
 		}
 
 		while (pq.size() > 1) {
-		    HuffNode left = pq.remove();
-		    HuffNode right = pq.remove();
-		    HuffNode t = new HuffNode(0, left.myWeight + right.myWeight, left, right);
-		    // create new HuffNode t with weight from
-		    // left.weight+right.weight and left, right subtrees
-		    pq.add(t);
+			HuffNode left = pq.remove();
+			HuffNode right = pq.remove();
+			HuffNode t = new HuffNode(0, left.myWeight + right.myWeight, left, right);
+			// create new HuffNode t with weight from
+			// left.weight+right.weight and left, right subtrees
+			pq.add(t);
 		}
 		HuffNode root = pq.remove();
 		return root;
 	}
-	
+
 	/**
 	 * Creates an array of frequencies for each 8-bit chunk from the input
-	 * @param in the input 
+	 * 
+	 * @param in the input
 	 * @return freq the array of frequencies
 	 */
 	private int[] readForCounts(BitInputStream in) {
@@ -112,7 +133,7 @@ public class HuffProcessor {
 		freq[PSEUDO_EOF] = 1;
 		while (true) {
 			int bits = in.readBits(BITS_PER_WORD);
-			if (bits == -1) 
+			if (bits == -1)
 				break;
 			freq[bits]++;
 		}
@@ -138,12 +159,13 @@ public class HuffProcessor {
 		readCompressedBits(root, in, out);
 		out.close();
 	}
-	
+
 	/**
 	 * Reads compressed bits and traverses tree
+	 * 
 	 * @param root the root HuffNode
-	 * @param in the input
-	 * @param out the output
+	 * @param in   the input
+	 * @param out  the output
 	 */
 	private void readCompressedBits(HuffNode root, BitInputStream in, BitOutputStream out) {
 		HuffNode current = root;
@@ -168,11 +190,12 @@ public class HuffProcessor {
 			}
 		}
 	}
-	
+
 	/**
 	 * Reads the first bit of an input to check if file is Huffman-coded
+	 * 
 	 * @param in the input
-	 * @return a HuffNode 
+	 * @return a HuffNode
 	 */
 	private HuffNode readTreeHeader(BitInputStream in) {
 		// read a single bit
