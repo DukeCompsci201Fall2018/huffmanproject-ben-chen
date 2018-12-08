@@ -52,6 +52,22 @@ public class HuffProcessor {
 	}
 	
 	/**
+	 * Write the compressed bits by parsing the encodings as integers
+	 * @param codings the array of encodings
+	 * @param in the input
+	 * @param out the output
+	 */
+	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
+		for (int i = 0; i < codings.length; i++) {
+			String code = codings[i];
+			out.writeBits(code.length(), Integer.parseInt(code, 2));
+		}
+		
+		String code = codings[PSEUDO_EOF];
+		out.writeBits(code.length(), Integer.parseInt(code, 2));
+	}
+
+	/**
 	 * Write the tree by writing a single 0 for internal nodes and a 1 
 	 * and the value stored in the leaf for leaf nodes
 	 * @param root the root of the subtree being written
