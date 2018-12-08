@@ -1,3 +1,4 @@
+import java.util.PriorityQueue;
 
 /**
  * Although this class has a history of several years, it is starting from a
@@ -49,7 +50,36 @@ public class HuffProcessor {
 		writeCompressedBits(codings, in, out);
 		out.close();
 	}
+	
+	/**
+	 * Uses priority queue of HuffNodes to create Huffman trie
+	 * @param counts array of frequencies of each 8-bit chunk
+	 * @return Huffman trie
+	 */
+	private HuffNode makeTreeFromCounts(int[] counts) {
+		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
 
+		for(int i = 0; counts[i] > 0; i++) {
+		    pq.add(new HuffNode(i, counts[i], null, null));
+		}
+
+		while (pq.size() > 1) {
+		    HuffNode left = pq.remove();
+		    HuffNode right = pq.remove();
+		    HuffNode t = new HuffNode(0, left.myWeight + right.myWeight, left, right);
+		    // create new HuffNode t with weight from
+		    // left.weight+right.weight and left, right subtrees
+		    pq.add(t);
+		}
+		HuffNode root = pq.remove();
+		return root;
+	}
+	
+	/**
+	 * Creates an array of frequencies for each 8-bit chunk from the input
+	 * @param in the input 
+	 * @return freq the array of frequencies
+	 */
 	private int[] readForCounts(BitInputStream in) {
 		int[] freq = new int[ALPH_SIZE + 1];
 		freq[PSEUDO_EOF] = 1;
@@ -81,7 +111,13 @@ public class HuffProcessor {
 		readCompressedBits(root, in, out);
 		out.close();
 	}
-
+	
+	/**
+	 * Reads compressed bits and traverses tree
+	 * @param root the root HuffNode
+	 * @param in the input
+	 * @param out the output
+	 */
 	private void readCompressedBits(HuffNode root, BitInputStream in, BitOutputStream out) {
 		HuffNode current = root;
 		while (true) {
@@ -105,7 +141,12 @@ public class HuffProcessor {
 			}
 		}
 	}
-
+	
+	/**
+	 * Reads the first bit of an input to check if file is Huffman-coded
+	 * @param in the input
+	 * @return a HuffNode 
+	 */
 	private HuffNode readTreeHeader(BitInputStream in) {
 		// read a single bit
 		int bit = in.readBits(1);
